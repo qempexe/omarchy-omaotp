@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.qempexe.omaotp",
   "name": "omaotp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "qempexe",
   "license": "MIT",
   "description": "TOTP authenticator for the Omarchy bar: one-time codes with countdown rings, stored in an encrypted local vault.",

@@ -155,11 +155,9 @@ BarWidget {
     autoLock.stop()
   }
 
+  // The code is written to the helper's stdin, never placed in argv.
   function copyCode(code) {
-    copyProc.command = ["sh", "-c",
-      'printf %s "$1" | wl-copy -n; ' +
-      '( sleep 30; [ "$(wl-paste -n 2>/dev/null)" = "$1" ] && wl-copy --clear ) >/dev/null 2>&1 &',
-      "_", code]
+    pendingCopy = code
     copyProc.running = true
   }
 
@@ -221,7 +219,24 @@ BarWidget {
     stdout: StdioCollector { onStreamFinished: root.onHelperOutput(text.trim()) }
   }
 
-  Process { id: copyProc }
+  property string pendingCopy: ""
+
+  Process {
+    id: copyProc
+    stdinEnabled: true
+    // Reads the code from stdin, copies it, drops it from the shell's variables,
+    // and clears the clipboard after 30 s only if it still holds the same value.
+    // The clear step compares SHA-256 hashes, so no code is kept in argv or in the
+    // background shell.
+    command: ["sh", "-c",
+      'IFS= read -r c || exit 1; ' +
+      'h=$(printf %s "$c" | sha256sum); printf %s "$c" | wl-copy -n; unset c; ' +
+      '( sleep 30; [ "$(wl-paste -n 2>/dev/null | sha256sum)" = "$h" ] && wl-copy --clear ) >/dev/null 2>&1 &']
+    onStarted: {
+      copyProc.write(root.pendingCopy + "\n")
+      root.pendingCopy = ""
+    }
+  }
   Process { id: saveColorProc }
 
   Process {
@@ -361,11 +376,22 @@ BarWidget {
 
         Text {
           anchors.centerIn: parent
-          text: Model.issuerGlyph(badge.modelData.issuer) || Model.KEY_GLYPH
+          visible: Model.issuerGlyph(badge.modelData.issuer) !== ""
+          text: Model.issuerGlyph(badge.modelData.issuer)
           textFormat: Text.PlainText
           color: root.fg
           font.family: root.bar ? root.bar.fontFamily : Style.font.family
           font.pixelSize: Math.round(Style.font.subtitle * 0.75)
+        }
+
+        Image {
+          anchors.centerIn: parent
+          visible: Model.issuerGlyph(badge.modelData.issuer) === ""
+          source: Qt.resolvedUrl("assets/key.png")
+          width: root.badgeSize - Style.space(4)
+          height: root.badgeSize - Style.space(4)
+          fillMode: Image.PreserveAspectFit
+          smooth: false
         }
       }
     }

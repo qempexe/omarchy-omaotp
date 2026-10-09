@@ -19,7 +19,6 @@ var ISSUER_GLYPHS = {
   amazon: "\uf270", twitter: "\uf099", facebook: "\uf09a", linkedin: "\uf0e1",
   slack: "\uf198", steam: "\uf1b6", twitch: "\uf1e8", youtube: "\uf167", paypal: "\uf1ed"
 }
-var KEY_GLYPH = "\uf084"
 var LOCK_GLYPH = "\uf023"
 
 var DEFAULT_COLOR = "#39d353"

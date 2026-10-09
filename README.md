@@ -4,7 +4,7 @@ A FreeOTP-style authenticator for the Omarchy bar. The bar shows one icon, ringe
 
 Codes are RFC 6238 TOTP, the same codes FreeOTP, Aegis and Google Authenticator produce. Secrets are stored in an encrypted vault on this machine, protected by a master password.
 
-![omaotp](assets/preview.png)
+![omaotp](assets/preview.png?v=2)
 
 ## Install
 
@@ -79,6 +79,7 @@ Panel.qml              popout: setup, unlock, account list, add, color
 Otp.js                 shared model: errors, issuer icons, colors, parsing
 bin/omaotp.py          helper: encrypted vault, TOTP, otpauth parsing
 bin/theme-accent.sh    reads the Omarchy theme accent
+assets/key.png          icon shown in the bar for accounts with no known brand icon
 ```
 
 The helper's commands are `status`, `init`, `codes`, `add` and `remove`. Each prints one line of JSON. Test it on its own with:
