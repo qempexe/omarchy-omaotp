@@ -4,7 +4,7 @@ A FreeOTP-style authenticator for the Omarchy bar. The bar shows one icon, ringe
 
 Codes are RFC 6238 TOTP, the same codes FreeOTP, Aegis and Google Authenticator produce. Secrets are stored in an encrypted vault on this machine, protected by a master password.
 
-![omaotp](assets/preview.png?v=2)
+![omaotp](preview.png)
 
 ## Install
 
