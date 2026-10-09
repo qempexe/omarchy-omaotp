@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.qempexe.omaotp",
+  "name": "omaotp",
+  "version": "1.0.0",
+  "author": "qempexe",
+  "license": "MIT",
+  "description": "TOTP authenticator for the Omarchy bar: one-time codes with countdown rings, stored in an encrypted local vault.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "omaotp",
+    "category": "Security",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "defaults": {
+      "colorMode": "theme",
+      "customColor": "#39d353"
+    },
+    "schema": [
+      {
+        "key": "colorMode",
+        "type": "string",
+        "label": "Color",
+        "defaultValue": "theme",
+        "description": "theme follows the Omarchy theme accent, custom uses customColor, mono uses shades of the bar text color."
+      },
+      {
+        "key": "customColor",
+        "type": "string",
+        "label": "Custom color",
+        "defaultValue": "#39d353",
+        "description": "Hex color (#rrggbb), used when colorMode is custom."
+      }
+    ]
+  }
+}
