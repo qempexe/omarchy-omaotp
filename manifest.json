@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "io.github.qempexe.omaotp",
   "name": "omaotp",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "author": "qempexe",
   "license": "MIT",
-  "description": "TOTP authenticator for the Omarchy bar: one-time codes with countdown rings, stored in an encrypted local vault.",
+  "description": "TOTP authenticator for the Omarchy bar: one-time codes with countdown rings, stored in an encrypted local vault. Themed panel with a live-reloaded settings file.",
   "kinds": [
     "bar-widget"
   ],
@@ -25,9 +25,9 @@
       {
         "key": "colorMode",
         "type": "string",
-        "label": "Color",
+        "label": "Accent color",
         "defaultValue": "theme",
-        "description": "theme follows the Omarchy theme accent, custom uses customColor, mono uses shades of the bar text color."
+        "description": "theme takes the background, text and accent of the Omarchy theme, custom uses customColor as the accent, mono uses shades of the bar text color."
       },
       {
         "key": "customColor",
@@ -35,6 +35,20 @@
         "label": "Custom color",
         "defaultValue": "#39d353",
         "description": "Hex color (#rrggbb), used when colorMode is custom."
+      },
+      {
+        "key": "autoLockMinutes",
+        "type": "number",
+        "label": "Lock after",
+        "defaultValue": 5,
+        "description": "Minutes after the panel closes before the vault locks. One of 1, 2, 5, 10, 15, 30."
+      },
+      {
+        "key": "clipboardSeconds",
+        "type": "number",
+        "label": "Clear clipboard after",
+        "defaultValue": 30,
+        "description": "Seconds before a copied code is cleared from the clipboard. One of 10, 20, 30, 60, 120."
       }
     ]
   }
