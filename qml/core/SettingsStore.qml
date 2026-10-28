@@ -28,45 +28,25 @@ Item {
     signal keyChanged(string key)
 
     function get(key) {
-        var v = values[key]
+        const v = values[key]
         return v === undefined ? null : v
     }
 
     function set(key, value) {
-        var next = {}
-        for (var k in values) next[k] = values[k]
+        const next = {}
+        for (const k in values) next[k] = values[k]
         if (value === null || value === undefined) delete next[key]
         else next[key] = value
         values = next
         if (!loaded && !pendingAll) {
-            var p = {}
-            for (var pk in pending) p[pk] = pending[pk]
+            const p = {}
+            for (const pk in pending) p[pk] = pending[pk]
             p[key] = (value === undefined) ? null : value
             pending = p
         }
         persist()
         changed()
         keyChanged(key)
-    }
-
-    // Several keys at once (a preset): one write, one change signal.
-    function setMany(patch) {
-        var next = {}
-        for (var k in values) next[k] = values[k]
-        for (var pk in patch) {
-            if (patch[pk] === null || patch[pk] === undefined) delete next[pk]
-            else next[pk] = patch[pk]
-        }
-        values = next
-        if (!loaded && !pendingAll) {
-            var p = {}
-            for (var ek in pending) p[ek] = pending[ek]
-            for (var mk in patch) p[mk] = (patch[mk] === undefined) ? null : patch[mk]
-            pending = p
-        }
-        persist()
-        changed()
-        keyChanged("*")
     }
 
     function reset() {
@@ -79,8 +59,8 @@ Item {
 
     // Back to the given defaults (stored explicitly, so nothing else shows through).
     function resetAll(defaults) {
-        var next = {}
-        for (var k in defaults) next[k] = defaults[k]
+        const next = {}
+        for (const k in defaults) next[k] = defaults[k]
         values = next
         if (!loaded) pendingAll = true
         persist()
@@ -113,8 +93,8 @@ Item {
         if (!dirty) return
         dirty = false
         lastWrite = Date.now()
-        var text = JSON.stringify(values, null, 2) + "\n"
-        var r = recent.slice(-7)
+        const text = JSON.stringify(values, null, 2) + "\n"
+        const r = recent.slice(-7)
         r.push(text)
         recent = r
         echoTimer.restart()
@@ -122,7 +102,7 @@ Item {
     }
 
     function absorb(text) {
-        var raw = String(text || "")
+        const raw = String(text || "")
         if (loaded) {
             // While our own write is pending or still settling, whatever the file
             // watcher reports is ours (it can even be a half-written or empty
@@ -130,26 +110,26 @@ Item {
             if (dirty || writeTimer.running || echoTimer.running) return
             if (recent.indexOf(raw) >= 0) return
         }
-        var next = null
+        let next = null
         try {
-            var parsed = JSON.parse(raw)
+            const parsed = JSON.parse(raw)
             if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) next = parsed
         } catch (e) { }
-        var wasLoaded = loaded
+        const wasLoaded = loaded
         if (!wasLoaded) {
             // First read: saved file + anything edited before it arrived.
-            var merged = {}
+            const merged = {}
             if (!pendingAll && next !== null)
-                for (var fk in next) merged[fk] = next[fk]
+                for (const fk in next) merged[fk] = next[fk]
             if (pendingAll) {
-                for (var vk in values) merged[vk] = values[vk]
+                for (const vk in values) merged[vk] = values[vk]
             } else {
-                for (var pk in pending) {
+                for (const pk in pending) {
                     if (pending[pk] === null) delete merged[pk]
                     else merged[pk] = pending[pk]
                 }
             }
-            var touched = pendingAll || Object.keys(pending).length > 0
+            const touched = pendingAll || Object.keys(pending).length > 0
             values = merged
             pending = ({})
             pendingAll = false
@@ -169,7 +149,8 @@ Item {
 
     Process {
         id: mkdir
-        command: ["mkdir", "-p", root.stateDir]
+        // the settings folder is yours alone (0700)
+        command: ["sh", "-c", 'umask 077; mkdir -p -m 700 -- "$1" && [ ! -L "$1" ] && chmod 700 -- "$1"', "sh", root.stateDir]
         onExited: file.reload()
     }
 

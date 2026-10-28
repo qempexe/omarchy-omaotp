@@ -1,54 +1,298 @@
 {
   "schemaVersion": 1,
   "id": "io.github.qempexe.omaotp",
-  "name": "omaotp",
+  "name": "Omaotp",
   "version": "1.1.0",
   "author": "qempexe",
   "license": "MIT",
-  "description": "TOTP authenticator for the Omarchy bar: one-time codes with countdown rings, stored in an encrypted local vault. Themed panel with a live-reloaded settings file.",
+  "description": "One-time codes (TOTP) in the Omarchy bar, from an encrypted vault on your computer: countdown rings, one-click copy that clears itself, and a window docked to the bar or popped out.",
   "kinds": [
     "bar-widget"
   ],
   "entryPoints": {
-    "barWidget": "BarWidget.qml"
+    "barWidget": "qml/BarWidget.qml"
   },
   "barWidget": {
-    "displayName": "omaotp",
+    "displayName": "Omaotp",
+    "description": "TOTP authenticator with an encrypted local vault",
     "category": "Security",
+    "aliases": [
+      "otp",
+      "totp",
+      "2fa",
+      "authenticator",
+      "codes",
+      "mfa"
+    ],
     "allowMultiple": false,
     "defaultSection": "right",
     "defaults": {
       "colorMode": "theme",
-      "customColor": "#39d353"
+      "customBg": "#141414",
+      "customFg": "#e0e0e0",
+      "accentColor": "#39d353",
+      "textColor": "auto",
+      "cardStyle": "soft",
+      "density": "comfortable",
+      "cornerRadius": 4,
+      "fontScale": 100,
+      "showIcons": true,
+      "groupCodes": true,
+      "windowWidth": 460,
+      "windowHeight": 560,
+      "openAs": "panel",
+      "frame": false,
+      "frameGradient": true,
+      "frameColor": "accent",
+      "surfaceTint": 0,
+      "opacity": 97,
+      "autoLockMinutes": 5,
+      "lockOnClose": false,
+      "clipboardSeconds": 30,
+      "hideCodes": false,
+      "barShows": "ring",
+      "middleClick": "lock"
     },
     "schema": [
       {
         "key": "colorMode",
-        "type": "string",
-        "label": "Accent color",
+        "type": "enum",
+        "label": "Colors",
         "defaultValue": "theme",
-        "description": "theme takes the background, text and accent of the Omarchy theme, custom uses customColor as the accent, mono uses shades of the bar text color."
+        "description": "Follow theme matches your Omarchy theme live. Window borders takes the accent from your theme's window border. Custom lets you choose the background, text and accent. Monochrome removes every hue.",
+        "options": [
+          "theme",
+          "borders",
+          "custom",
+          "monochrome"
+        ]
       },
       {
-        "key": "customColor",
+        "key": "customBg",
         "type": "string",
-        "label": "Custom color",
+        "label": "Custom background",
+        "defaultValue": "#141414",
+        "description": "Background, text and accent, used as you pick them. Text too close to the background is made darker or lighter, keeping its tint, only as much as it needs to read. A #rrggbb color, used when Colors is Custom."
+      },
+      {
+        "key": "customFg",
+        "type": "string",
+        "label": "Custom text",
+        "defaultValue": "#e0e0e0",
+        "description": "Background, text and accent, used as you pick them. Text too close to the background is made darker or lighter, keeping its tint, only as much as it needs to read. A #rrggbb color, used when Colors is Custom."
+      },
+      {
+        "key": "accentColor",
+        "type": "string",
+        "label": "Custom accent",
         "defaultValue": "#39d353",
-        "description": "Hex color (#rrggbb), used when colorMode is custom."
+        "description": "Background, text and accent, used as you pick them. Text too close to the background is made darker or lighter, keeping its tint, only as much as it needs to read. A #rrggbb color, used when Colors is Custom."
+      },
+      {
+        "key": "textColor",
+        "type": "enum",
+        "label": "Text",
+        "defaultValue": "auto",
+        "description": "Always readable keeps your theme's text color, and switches to black or white when the window is too light or too dark for it. My text color uses the Text color from Custom colors.",
+        "options": [
+          "auto",
+          "theme",
+          "custom"
+        ]
+      },
+      {
+        "key": "cardStyle",
+        "type": "enum",
+        "label": "Card style",
+        "defaultValue": "soft",
+        "description": "Soft fills the account rows lightly, outline draws a border only, flat has neither.",
+        "options": [
+          "soft",
+          "outline",
+          "flat"
+        ]
+      },
+      {
+        "key": "density",
+        "type": "enum",
+        "label": "Spacing",
+        "defaultValue": "comfortable",
+        "description": "How much air there is between things.",
+        "options": [
+          "compact",
+          "comfortable",
+          "spacious"
+        ]
+      },
+      {
+        "key": "cornerRadius",
+        "type": "integer",
+        "label": "Roundness",
+        "defaultValue": 4,
+        "description": "0 is square, 20 is very round.",
+        "min": 0,
+        "max": 20,
+        "step": 2
+      },
+      {
+        "key": "fontScale",
+        "type": "integer",
+        "label": "Text size",
+        "defaultValue": 100,
+        "description": "1 is normal, 1.25 is a quarter bigger.",
+        "min": 80,
+        "max": 150,
+        "step": 5
+      },
+      {
+        "key": "showIcons",
+        "type": "boolean",
+        "label": "Issuer icons",
+        "defaultValue": true,
+        "description": "The logo of known services (GitHub, Google, Discord…) on each row. Off shows the first letter."
+      },
+      {
+        "key": "groupCodes",
+        "type": "boolean",
+        "label": "Split codes in two",
+        "defaultValue": true,
+        "description": "Show 123 456 instead of 123456. The copied code never has the space."
+      },
+      {
+        "key": "windowWidth",
+        "type": "integer",
+        "label": "Window width",
+        "defaultValue": 460,
+        "description": "How wide Omaotp opens.",
+        "min": 380,
+        "max": 1000,
+        "step": 20
+      },
+      {
+        "key": "windowHeight",
+        "type": "integer",
+        "label": "Window height",
+        "defaultValue": 560,
+        "description": "How tall Omaotp opens.",
+        "min": 400,
+        "max": 1100,
+        "step": 20
+      },
+      {
+        "key": "openAs",
+        "type": "enum",
+        "label": "Open as",
+        "defaultValue": "panel",
+        "description": "Where the bar button opens Omaotp. You can always pop it out or dock it back from the header.",
+        "options": [
+          "panel",
+          "window"
+        ]
+      },
+      {
+        "key": "frame",
+        "type": "boolean",
+        "label": "Window outline",
+        "defaultValue": false,
+        "description": "Draw the edge in your window border's colors instead of a plain neutral line."
+      },
+      {
+        "key": "frameGradient",
+        "type": "boolean",
+        "label": "Outline gradient",
+        "defaultValue": true,
+        "description": "Use the window border's whole gradient, at its angle, when it has more than one color."
+      },
+      {
+        "key": "frameColor",
+        "type": "enum",
+        "label": "Outline color",
+        "defaultValue": "accent",
+        "description": "The one color the outline takes when it isn't a gradient.",
+        "options": [
+          "accent",
+          "first",
+          "middle",
+          "last"
+        ]
+      },
+      {
+        "key": "surfaceTint",
+        "type": "integer",
+        "label": "Window tint",
+        "defaultValue": 0,
+        "description": "How much of the accent washes over the background. 0 keeps it plain.",
+        "min": 0,
+        "max": 30,
+        "step": 2
+      },
+      {
+        "key": "opacity",
+        "type": "integer",
+        "label": "Window opacity",
+        "defaultValue": 97,
+        "description": "100 is solid.",
+        "min": 50,
+        "max": 100,
+        "step": 1
       },
       {
         "key": "autoLockMinutes",
-        "type": "number",
+        "type": "integer",
         "label": "Lock after",
         "defaultValue": 5,
-        "description": "Minutes after the panel closes before the vault locks. One of 1, 2, 5, 10, 15, 30."
+        "description": "Minutes after the window closes before the vault locks itself.",
+        "min": 1,
+        "max": 60,
+        "step": 1
+      },
+      {
+        "key": "lockOnClose",
+        "type": "boolean",
+        "label": "Lock when the window closes",
+        "defaultValue": false,
+        "description": "Lock straight away instead of waiting. Every open then asks for the master password."
       },
       {
         "key": "clipboardSeconds",
-        "type": "number",
-        "label": "Clear clipboard after",
+        "type": "integer",
+        "label": "Clear the clipboard after",
         "defaultValue": 30,
-        "description": "Seconds before a copied code is cleared from the clipboard. One of 10, 20, 30, 60, 120."
+        "description": "Seconds before a copied code is cleared, if the clipboard still holds it.",
+        "min": 10,
+        "max": 120,
+        "step": 5
+      },
+      {
+        "key": "hideCodes",
+        "type": "boolean",
+        "label": "Hide codes until hovered",
+        "defaultValue": false,
+        "description": "Codes show as dots until the mouse is over their row, for when someone may be looking."
+      },
+      {
+        "key": "barShows",
+        "type": "enum",
+        "label": "Bar button shows",
+        "defaultValue": "ring",
+        "description": "What the bar shows for the first account while the vault is open. Drag an account to the top of the list to choose it.",
+        "options": [
+          "ring",
+          "code",
+          "lock"
+        ]
+      },
+      {
+        "key": "middleClick",
+        "type": "enum",
+        "label": "Middle click",
+        "defaultValue": "lock",
+        "description": "What a middle click on the bar button does.",
+        "options": [
+          "lock",
+          "copy",
+          "none"
+        ]
       }
     ]
   }
