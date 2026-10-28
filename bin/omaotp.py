@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+# Omaotp's helper: the encrypted vault and the TOTP codes. Every command reads the
+# master password (and its argument) from stdin and prints one line of JSON.
+#
+# The vault is AES-256-CBC by openssl (PBKDF2-SHA256, 300,000 rounds), and since
+# 1.2 it also carries an HMAC-SHA256 of the encrypted bytes, with its own key from
+# the password, so a changed or swapped vault is refused before it is decrypted.
+# A vault from 1.1 or before is read as it is and rewritten in the new form.
 
 import base64
 import hashlib
@@ -16,6 +23,9 @@ DATA_DIR = os.path.join(
     os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "omaotp")
 VAULT = os.path.join(DATA_DIR, "vault.enc")
 PBKDF2_ITER = "300000"
+MAGIC = b"OMAOTP2\n"
+SALT_LEN = 16
+MAC_LEN = 32
 ALGOS = {"SHA1": hashlib.sha1, "SHA256": hashlib.sha256, "SHA512": hashlib.sha512}
 MAX_ENTRIES = 200
 ID_RE = re.compile(r"^[0-9a-f]{12}$")
@@ -93,11 +103,33 @@ def run_openssl(args, password, data):
     finally:
         os.close(r)
 
+def mac_key(password, salt):
+    return hashlib.pbkdf2_hmac("sha256", password.encode(), b"omaotp-mac" + salt, int(PBKDF2_ITER))
+
+def private_dir():
+    # the vault's folder is yours alone, and never a link someone else placed there
+    if os.path.islink(DATA_DIR):
+        fail("request-failed")
+    os.makedirs(DATA_DIR, mode=0o700, exist_ok=True)
+    if os.stat(DATA_DIR).st_uid != os.getuid():
+        fail("request-failed")
+    os.chmod(DATA_DIR, 0o700)
+
 def load(password):
+    """The entries, and whether the vault is still in the old (1.1) form."""
     if not os.path.exists(VAULT):
         fail("no-vault")
+    if os.path.islink(VAULT):
+        fail("request-failed")
     with open(VAULT, "rb") as f:
-        blob = f.read()
+        blob = f.read(4 * 1024 * 1024)
+    old = not blob.startswith(MAGIC)
+    if not old:
+        head = len(MAGIC)
+        salt, tag, blob = blob[head:head + SALT_LEN], blob[head + SALT_LEN:head + SALT_LEN + MAC_LEN], blob[head + SALT_LEN + MAC_LEN:]
+        want = hmac.new(mac_key(password, salt), blob, hashlib.sha256).digest()
+        if len(salt) != SALT_LEN or not hmac.compare_digest(tag, want):
+            fail("bad-password")
     p = run_openssl(["-d"], password, blob)
     if p.returncode != 0:
         fail("bad-password")
@@ -107,18 +139,24 @@ def load(password):
             raise ValueError
     except (ValueError, KeyError, UnicodeDecodeError):
         fail("bad-response")
-    return entries
+    return entries, old
 
 def save(password, entries):
-    os.makedirs(DATA_DIR, mode=0o700, exist_ok=True)
-    plain = json.dumps({"version": 1, "entries": entries}).encode()
+    private_dir()
+    plain = json.dumps({"version": 2, "entries": entries}).encode()
     p = run_openssl([], password, plain)
     if p.returncode != 0:
         fail("request-failed")
+    salt = os.urandom(SALT_LEN)
+    tag = hmac.new(mac_key(password, salt), p.stdout, hashlib.sha256).digest()
     tmp = VAULT + ".tmp"
-    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    try:
+        os.unlink(tmp)                # a leftover from an interrupted save
+    except FileNotFoundError:
+        pass
+    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
     with os.fdopen(fd, "wb") as f:
-        f.write(p.stdout)
+        f.write(MAGIC + salt + tag + p.stdout)
         f.flush()
         os.fsync(f.fileno())
     os.replace(tmp, VAULT)
@@ -147,7 +185,10 @@ def main():
             fail("bad-password")
         now = time.time()
         result = []
-        for e in load(pw)[:MAX_ENTRIES]:
+        entries, old = load(pw)
+        if old:
+            save(pw, entries)         # bring a 1.1 vault to the new form, once
+        for e in entries[:MAX_ENTRIES]:
             try:
                 result.append({
                     "id": e["id"],
@@ -164,7 +205,7 @@ def main():
         pw, uri = read_lines(2)
         if not pw:
             fail("bad-password")
-        entries = load(pw)
+        entries, _ = load(pw)
         new = parse_uri(uri)
         if len(entries) >= MAX_ENTRIES:
             fail("too-many")
@@ -180,7 +221,7 @@ def main():
             fail("bad-password")
         if not ID_RE.match(eid):
             fail("not-found")
-        entries = load(pw)
+        entries, _ = load(pw)
         kept = [e for e in entries if e.get("id") != eid]
         if len(kept) == len(entries):
             fail("not-found")
@@ -192,7 +233,7 @@ def main():
         if not pw:
             fail("bad-password")
         wanted = [x for x in line.split(",") if ID_RE.match(x)]
-        entries = load(pw)
+        entries, _ = load(pw)
         by_id = {e.get("id"): e for e in entries}
         ordered = [by_id[i] for i in wanted if i in by_id]
         seen = {e.get("id") for e in ordered}
