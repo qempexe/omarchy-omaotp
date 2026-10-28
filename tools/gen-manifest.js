@@ -28,7 +28,7 @@ const manifest = {
   schemaVersion: 1,
   id: "io.github.qempexe.omaotp",
   name: "Omaotp",
-  version: "1.2.0",
+  version: "1.2.1",
   author: "qempexe",
   license: "MIT",
   description: "One-time codes (TOTP) in the Omarchy bar, from an encrypted vault on your computer: countdown rings, one-click copy that clears itself, and a window docked to the bar or popped out.",

@@ -4,6 +4,12 @@ All notable changes to Omaotp. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 2026-10-28
+
+### Fixed
+
+- **Check out my other plugins** in the About tab opens the page again.
+
 ## [1.2.0] - 2026-10-28
 
 ### Added
@@ -87,6 +93,7 @@ All notable changes to Omaotp. The format follows
   behind a master password, countdown rings, drag to reorder, and theme, custom and
   mono colors.
 
+[1.2.1]: https://github.com/qempexe/omarchy-omaotp/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/qempexe/omarchy-omaotp/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/qempexe/omarchy-omaotp/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/qempexe/omarchy-omaotp/compare/v1.0.0...v1.0.1
