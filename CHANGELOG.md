@@ -4,6 +4,14 @@ All notable changes to Omaotp. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] - 2026-10-28
+
+### Security
+
+- A vault without its HMAC is only taken as a 1.1 vault when it really is one (version 1
+  inside). A newer vault with its HMAC removed is refused with a clear message, and left
+  as it is, instead of being decrypted and sealed again.
+
 ## [1.2.1] - 2026-10-28
 
 ### Fixed
@@ -93,6 +101,7 @@ All notable changes to Omaotp. The format follows
   behind a master password, countdown rings, drag to reorder, and theme, custom and
   mono colors.
 
+[1.2.2]: https://github.com/qempexe/omarchy-omaotp/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/qempexe/omarchy-omaotp/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/qempexe/omarchy-omaotp/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/qempexe/omarchy-omaotp/compare/v1.0.1...v1.1.0
