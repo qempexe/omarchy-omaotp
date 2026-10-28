@@ -278,6 +278,15 @@ BarWidget {
         function onLoadedChanged() { legacyMove.apply() }
     }
 
+    // opening a link (the About tab's): only plain https addresses, through xdg-open
+    function openUrl(url) {
+        const u = String(url || "")
+        if (!/^https:\/\/[A-Za-z0-9.-]+(\/[A-Za-z0-9._~%!$&'()*+,;=:@\/?#-]*)?$/.test(u) || u.length > 300) return
+        opener.command = ["xdg-open", u]
+        opener.running = true
+    }
+    Process { id: opener }
+
     Component.onCompleted: checkVault()
 
     // ---- the plugin's own manifest (the About tab shows its version) ----------------
