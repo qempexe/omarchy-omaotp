@@ -22,6 +22,7 @@ t("what the helper prints is checked before it is shown", () => {
     assert.strictEqual(M.parseEntries("not json").error, "bad-response");
     assert.strictEqual(M.parseEntries('{"error":"<b>"}').error, "request-failed");
     assert.strictEqual(M.parseEntries('{"error":"bad-password"}').error, "bad-password");
+    assert.strictEqual(M.parseEntries('{"error":"tampered"}').error, "tampered");
     assert.strictEqual(M.errorText("nope"), M.ERRORS["request-failed"]);
 });
 
@@ -83,6 +84,29 @@ t("the vault: private, authenticated, and refusing a wrong password or a changed
     blob[blob.length - 1] ^= 1;
     fs.writeFileSync(vault, blob);
     assert.strictEqual(run("codes", pw).error, "bad-password", "a changed vault is refused");
+    fs.rmSync(home, { recursive: true, force: true });
+});
+
+t("a newer vault with its HMAC stripped off is refused, and not rewritten", () => {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "omaotp-"));
+    const env = Object.assign({}, process.env, { HOME: home });
+    delete env.XDG_DATA_HOME;
+    const run = (cmd, input) => JSON.parse(cp.execFileSync("python3", [path.join(root, "bin", "omaotp.py"), cmd],
+        { input, env, encoding: "utf8" }).trim());
+    const pw = "correct horse battery\n";
+    assert.ok(run("init", pw).ok);
+    assert.ok(run("add", pw + "otpauth://totp/GitHub:me?secret=JBSWY3DPEHPK3PXP&issuer=GitHub\n").ok);
+    const vault = path.join(home, ".local", "share", "omaotp", "vault.enc");
+    // remove the whole wrapper (magic, salt and HMAC): only openssl's own bytes remain
+    const stripped = fs.readFileSync(vault).subarray(8 + 16 + 32);
+    assert.ok(stripped.subarray(0, 8).equals(Buffer.from("Salted__")));
+    fs.writeFileSync(vault, stripped);
+    for (const cmd of ["codes", "add", "remove", "reorder"]) {
+        const extra = cmd === "add" ? "otpauth://totp/X:y?secret=JBSWY3DPEHPK3PXP\n" : (cmd === "remove" ? "0123456789ab\n" : "\n");
+        assert.strictEqual(run(cmd, pw + extra).error, "tampered", cmd);
+        assert.ok(fs.readFileSync(vault).equals(stripped), cmd + " left the file as it was");
+    }
+    assert.strictEqual(run("codes", "wrong password\n").error, "bad-password");
     fs.rmSync(home, { recursive: true, force: true });
 });
 

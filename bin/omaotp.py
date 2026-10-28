@@ -5,7 +5,8 @@
 # The vault is AES-256-CBC by openssl (PBKDF2-SHA256, 300,000 rounds), and since
 # 1.2 it also carries an HMAC-SHA256 of the encrypted bytes, with its own key from
 # the password, so a changed or swapped vault is refused before it is decrypted.
-# A vault from 1.1 or before is read as it is and rewritten in the new form.
+# A vault from 1.1 or before (version 1 inside) is read as it is and rewritten in the
+# new form; a newer vault without its HMAC is refused.
 
 import base64
 import hashlib
@@ -134,11 +135,18 @@ def load(password):
     if p.returncode != 0:
         fail("bad-password")
     try:
-        entries = json.loads(p.stdout.decode())["entries"]
+        data = json.loads(p.stdout.decode())
+        entries = data["entries"]
+        version = data.get("version")
         if not isinstance(entries, list):
             raise ValueError
-    except (ValueError, KeyError, UnicodeDecodeError):
+    except (ValueError, KeyError, UnicodeDecodeError, AttributeError):
         fail("bad-response")
+    # The form must match what is inside: a file without the HMAC is only taken when it
+    # really is a 1.1 vault (version 1). A newer vault with its HMAC stripped off is
+    # refused, and left as it is, instead of being decrypted and saved again.
+    if version != (1 if old else 2):
+        fail("tampered")
     return entries, old
 
 def save(password, entries):

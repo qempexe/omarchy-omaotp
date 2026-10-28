@@ -161,7 +161,9 @@ Settings saved by 1.1 keep working under their new names.
 
 - **How the vault is kept.** AES-256-CBC by `openssl`, with PBKDF2-SHA256 and 300,000
   rounds from your master password, and an HMAC-SHA256 of the encrypted bytes with its
-  own key from the password, checked before anything is decrypted. The file is written to
+  own key from the password, checked before anything is decrypted. A vault without the
+  HMAC is only taken when it really is a 1.1 vault, which is then sealed in the new form;
+  a newer one with its HMAC removed is refused and left as it is. The file is written to
   a new file first and then moved over the old one, so a crash can't leave half a vault.
 - **The master password** is never put on a command line. It goes to the helper on
   stdin and from there to `openssl` through a pipe, so it doesn't show in `ps`. It is

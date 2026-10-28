@@ -15,7 +15,8 @@ const ERRORS = {
   "bad-response": "The helper returned something unexpected.",
   "request-failed": "Something went wrong. Try again.",
   "short": "Use at least 8 characters.",
-  "mismatch": "The two passwords are not the same."
+  "mismatch": "The two passwords are not the same.",
+  "tampered": "The vault file was changed outside Omaotp, so it is not opened. Restore it from a backup."
 }
 
 // Nerd Font icons of well-known services, by issuer name (letters and digits only)
